@@ -6,6 +6,11 @@ import plotly.graph_objects as go
 import json
 import os
 from datetime import datetime, timedelta
+from streamlit_autorefresh import st_autorefresh
+from streamlit_extras.stylable_container import stylable_container
+from streamlit_extras.colored_header import colored_header
+from streamlit_lottie import st_lottie
+import requests
 
 # Configuración de la página
 st.set_page_config(
@@ -14,6 +19,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Auto-refresh para el timer (cada 1 segundo, sin recargar toda la página)
+#count = st_autorefresh(interval=1000, key="timer_refresh")
+
+# Función para cargar animaciones de Lottie
+def load_lottieurl(url):
+    try:
+        r = requests.get(url, timeout=5)
+        if r.status_code == 200:
+            return r.json()
+    except:
+        pass
+    return None
 
 # CSS personalizado para tema Halloween
 st.markdown("""
@@ -170,7 +188,30 @@ if 'teams' not in st.session_state:
     st.session_state.teams = []
 
 # Título principal
-st.markdown('<h1 class="halloween-title">🎃 JUEGOS DE HALLOWEEN 🎃</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="halloween-title">🎃 JUEGOS DE HALLOWEEN 🎃</h1>', unsafe_allow_html=True)
+    
+    # Cargar animaciones de Halloween
+    lottie_pumpkin = load_lottieurl("https://lottie.host/1f52b4d6-7ca4-4c32-8d6a-3f2bc0abf1e1/CKjxgP9RHa.json")
+    lottie_ghost = load_lottieurl("https://lottie.host/2e26a101-4393-4c3e-b1a3-b8d6d3e6e6d3/n3p9aQGGQI.json")
+    
+    # Mostrar animaciones en columnas
+    anim_col1, title_col, anim_col2 = st.columns([1, 3, 1])
+    with anim_col1:
+        if lottie_pumpkin:
+            st_lottie(lottie_pumpkin, height=150, key="pumpkin")
+        else:
+            st.markdown("🎃", unsafe_allow_html=True)
+    with title_col:
+        colored_header(
+            label="¡Diviértete con Pictionary y Mímica!",
+            description="Selecciona un modo de juego y genera palabras para jugar",
+            color_name="orange-70",
+        )
+    with anim_col2:
+        if lottie_ghost:
+            st_lottie(lottie_ghost, height=150, key="ghost")
+        else:
+            st.markdown("👻", unsafe_allow_html=True)
 
 # Cargar palabras
 words_data = load_words()
@@ -218,7 +259,19 @@ with st.sidebar:
         st.success("Puntuaciones reiniciadas!")
 
 # Contenido principal
-col1, col2 = st.columns([2, 1])
+with stylable_container(
+    key="main_container",
+    css_styles="""
+        {
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.9) 0%, rgba(51, 0, 102, 0.9) 50%, rgba(102, 0, 51, 0.9) 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+            margin-bottom: 20px;
+        }
+    """
+):
+    col1, col2 = st.columns([2, 1])
 
 with col1:
     # Selección de modo de juego
@@ -251,7 +304,7 @@ with col1:
     else:
         game_choice = st.selectbox(
             "Selecciona el modo de juego:",
-            ["", "🎨 Dibujar (Pictionary)", "🎭 Mímica (Charades)"]
+            ["🎨 Dibujar (Pictionary)", "🎭 Mímica (Charades)"]
         )
         
         if game_choice == "🎨 Dibujar (Pictionary)":
@@ -269,7 +322,7 @@ with col1:
         st.markdown(f'<div class="game-mode"><h2>Modo actual: {mode_text}</h2></div>', unsafe_allow_html=True)
         
         # Botones de acción
-        col_btn1, col_btn2, col_btn3 = st.columns(3)
+        col_btn1, col_btn2, col_btn3, col_btn4 = st.columns(4)
         
         with col_btn1:
             if st.button("🎲 Generar Palabra", key="generate_word"):
@@ -292,27 +345,67 @@ with col1:
         with col_btn3:
             if st.button("⏰ Iniciar Timer", key="start_timer"):
                 st.session_state.timer_start = time.time()
+        with col_btn4:
+            if st.button("⏹ Detener Timer", key="stop_timer", disabled=not bool(st.session_state.timer_start)):
+                st.session_state.timer_start = None
+                st.rerun()
         
         # Mostrar palabra actual
         if st.session_state.current_word:
             st.markdown(f'<div class="word-display">🎯 {st.session_state.current_word.upper()}</div>', unsafe_allow_html=True)
         
-        # Timer
+        # Timer con autorefresh incremental (permite detenerlo con el botón)
         if st.session_state.timer_start:
             elapsed = time.time() - st.session_state.timer_start
             remaining = max(0, st.session_state.timer_duration - elapsed)
             
-            if remaining > 0:
+            while remaining > 0:
                 minutes = int(remaining // 60)
                 seconds = int(remaining % 60)
-                st.markdown(f'<div class="timer-display">⏰ {minutes:02d}:{seconds:02d}</div>', unsafe_allow_html=True)
-                
-                # Auto-refresh para el timer
+
+                # Usar stylable_container para mejorar la apariencia del timer
+                with stylable_container(
+                    key="timer_container",
+                    css_styles="""
+                        {
+                            background-color: rgba(0, 0, 0, 0.7);
+                            border-radius: 10px;
+                            padding: 10px;
+                            border: 2px solid #ff6600;
+                            box-shadow: 0 0 10px #ff6600;
+                        }
+                    """
+                ):
+                    st.markdown(f'<div class="timer-display">⏰ {minutes:02d}:{seconds:02d}</div>', unsafe_allow_html=True)
+                # Sleep for 1 sec, then refresh only this container
                 time.sleep(1)
                 st.rerun()
             else:
-                st.markdown('<div class="timer-display">⏰ ¡TIEMPO AGOTADO!</div>', unsafe_allow_html=True)
+                with stylable_container(
+                    key="timer_end_container",
+                    css_styles="""
+                        {
+                            background-color: rgba(255, 0, 0, 0.3);
+                            border-radius: 10px;
+                            padding: 10px;
+                            border: 2px solid #ff0000;
+                            box-shadow: 0 0 10px #ff0000;
+                        }
+                    """
+                ):
+                    st.markdown('<div class="timer-display">⏰ ¡TIEMPO AGOTADO!</div>', unsafe_allow_html=True)
+
+                # Marcar el timer como finalizado para detener autorefresh
+                st.session_state.timer_start = None
+
+                # Mostrar animación cuando se acaba el tiempo
+                lottie_timeout = load_lottieurl("https://lottie.host/58ebb8ac-8e8c-49d7-9bd1-5c6565749d5d/Xey6u0sHRb.json")
+                if lottie_timeout:
+                    st_lottie(lottie_timeout, height=100, key="timeout")
+                else:
+                    st.markdown("🎃 ¡TIEMPO AGOTADO! 🎃", unsafe_allow_html=True)
                 st.balloons()
+
                 if st.button("🔄 Reiniciar Timer"):
                     st.session_state.timer_start = None
 
