@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎃 Juegos de Halloween</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎃 JUEGOS DE HALLOWEEN 🎃</h1>
+            <div class="header-animation">
+                <lottie-player src="https://lottie.host/1f52b4d6-7ca4-4c32-8d6a-3f2bc0abf1e1/CKjxgP9RHa.json" background="transparent" speed="1" class="lottie-player" loop autoplay></lottie-player>
+                <div>
+                    <h3 style="color: #ff9900; margin: 0;">¡Diviértete con Pictionary y Mímica!</h3>
+                    <p style="text-align: center; color: #fff;">Selecciona un modo de juego y genera palabras</p>
+                </div>
+                <lottie-player src="https://lottie.host/2e26a101-4393-4c3e-b1a3-b8d6d3e6e6d3/n3p9aQGGQI.json" background="transparent" speed="1" class="lottie-player" loop autoplay></lottie-player>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Game Section -->
+            <section class="game-section">
+                <div class="card">
+                    <h2>🎮 Selección de Juego</h2>
+                    
+                    <div id="selection-area">
+                        <div class="mode-selector">
+                            <label>
+                                <input type="radio" name="selection-method" value="wheel" checked onclick="toggleSelectionMethod('wheel')"> 
+                                🎡 Ruleta
+                            </label>
+                            <label>
+                                <input type="radio" name="selection-method" value="manual" onclick="toggleSelectionMethod('manual')"> 
+                                🎯 Manual
+                            </label>
+                        </div>
+
+                        <!-- Wheel Selection -->
+                        <div id="wheel-view">
+                            <div id="wheel-container">
+                                <div id="arrow"></div>
+                                <div id="wheel"></div>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn" onclick="spinWheel()">🎲 ¡Girar Ruleta!</button>
+                            </div>
+                        </div>
+
+                        <!-- Manual Selection -->
+                        <div id="manual-view" class="hidden" style="text-align: center;">
+                            <button class="btn" onclick="selectMode('pictionary')">🎨 Dibujar (Pictionary)</button>
+                            <button class="btn" onclick="selectMode('mimic')">🎭 Mímica (Charades)</button>
+                        </div>
+                    </div>
+
+                    <!-- Active Game Area -->
+                    <div id="game-area" class="hidden">
+                        <div id="game-mode-display" class="game-mode-indicator"></div>
+                        
+                        <div class="controls" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+                            <button class="btn" onclick="generateWord()">🎲 Generar Palabra</button>
+                            <button class="btn btn-secondary" onclick="resetGameSelection()">🔁 Cambiar Modo</button>
+                            <button class="btn" onclick="startTimer()">⏰ Iniciar Timer</button>
+                            <button class="btn btn-danger" onclick="stopTimer()">⏹ Detener Timer</button>
+                        </div>
+
+                        <div id="word-container" class="word-display">
+                            <span>Haz clic en "Generar Palabra"</span>
+                        </div>
+
+                        <div id="timer-container" class="timer-display hidden">
+                            <span id="timer-val">01:00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scoreboard Section -->
+            <section class="scoreboard-section">
+                <div class="card">
+                    <h2>🏆 Marcador</h2>
+                    
+                    <div class="team-input">
+                        <input type="text" id="new-team-name" placeholder="Nombre del equipo">
+                        <button class="btn" onclick="addTeam()">➕</button>
+                    </div>
+
+                    <div id="teams-list">
+                        <!-- Teams will be populated here -->
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-danger" onclick="resetScores()">🔄 Reiniciar Puntuaciones</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>⚙️ Configuración</h2>
+                    <label style="color: white;">Duración Timer (segundos):</label>
+                    <input type="range" id="timer-duration" min="30" max="300" step="15" value="60" oninput="updateTimerDisplay(this.value)">
+                    <span id="timer-setting-val" style="color: white; font-weight: bold;">60</span>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <hr>
+            <div style="text-align: center; color: #ff6600; font-size: 1.2rem; padding: 20px;">
+                🎃 ¡Feliz Halloween! 🎃<br>
+                <small>Creado con ❤️ para diversión espeluznante</small>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Audio for sound effects (optional) -->
+    <audio id="sound-alarm" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
